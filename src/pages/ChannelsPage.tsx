@@ -13,6 +13,13 @@ import avatar2 from "@/assets/avatars/avatar-2.jpg";
 import avatar3 from "@/assets/avatars/avatar-3.jpg";
 import avatar4 from "@/assets/avatars/avatar-4.jpg";
 import avatar5 from "@/assets/avatars/avatar-5.jpg";
+import avatar6 from "@/assets/avatars/avatar-6.jpg";
+import avatar7 from "@/assets/avatars/avatar-7.jpg";
+import avatar8 from "@/assets/avatars/avatar-8.jpg";
+import avatar9 from "@/assets/avatars/avatar-9.jpg";
+import avatar10 from "@/assets/avatars/avatar-10.jpg";
+import avatar11 from "@/assets/avatars/avatar-11.jpg";
+import avatar12 from "@/assets/avatars/avatar-12.jpg";
 import building1 from "@/assets/buildings/building-1.jpg";
 import building2 from "@/assets/buildings/building-2.jpg";
 
@@ -35,13 +42,53 @@ const channels: Channel[] = [
   { id: "5", type: "rescuers", name: "Rescuers", memberCount: 8, isOnline: false, image: avatar5 },
 ];
 
-const friendsMembers = [
-  { src: avatar1, alt: "Soorya", status: "safe" as const },
-  { src: avatar2, alt: "Mike", status: "safe" as const },
-  { src: avatar3, alt: "Marvin", status: "evacuating" as const },
-  { src: avatar4, alt: "Gregory", status: "safe" as const },
-  { src: avatar5, alt: "Samuel", status: "danger" as const },
-];
+// Dynamic members for each channel
+const channelMembers: Record<string, { src: string; alt: string; status: "safe" | "evacuating" | "danger" }[]> = {
+  "1": [ // Unit
+    { src: avatar1, alt: "Soorya", status: "safe" },
+    { src: avatar6, alt: "Priya", status: "safe" },
+    { src: avatar9, alt: "Kevin", status: "evacuating" },
+    { src: avatar12, alt: "James", status: "safe" },
+  ],
+  "2": [ // Friends
+    { src: avatar1, alt: "Soorya", status: "safe" },
+    { src: avatar2, alt: "Mike", status: "safe" },
+    { src: avatar3, alt: "Marvin", status: "evacuating" },
+    { src: avatar4, alt: "Gregory", status: "safe" },
+    { src: avatar5, alt: "Samuel", status: "danger" },
+    { src: avatar8, alt: "Lisa", status: "safe" },
+    { src: avatar11, alt: "Fatima", status: "safe" },
+  ],
+  "3": [ // Management
+    { src: avatar2, alt: "Mike", status: "safe" },
+    { src: avatar7, alt: "Robert", status: "safe" },
+    { src: avatar10, alt: "Carlos", status: "safe" },
+  ],
+  "4": [ // Open World
+    { src: avatar6, alt: "Priya", status: "safe" },
+    { src: avatar7, alt: "Robert", status: "evacuating" },
+    { src: avatar8, alt: "Lisa", status: "safe" },
+    { src: avatar9, alt: "Kevin", status: "danger" },
+    { src: avatar10, alt: "Carlos", status: "safe" },
+    { src: avatar11, alt: "Fatima", status: "evacuating" },
+    { src: avatar12, alt: "James", status: "safe" },
+  ],
+  "5": [ // Rescuers
+    { src: avatar5, alt: "Samuel", status: "safe" },
+    { src: avatar7, alt: "Robert", status: "safe" },
+    { src: avatar10, alt: "Carlos", status: "safe" },
+    { src: avatar12, alt: "James", status: "safe" },
+  ],
+};
+
+// CSS class for each channel member section
+const channelMemberStyles: Record<string, string> = {
+  "1": "channel-members-unit",
+  "2": "channel-members-friends",
+  "3": "channel-members-management",
+  "4": "channel-members-world",
+  "5": "channel-members-rescuers",
+};
 
 export default function ChannelsPage() {
   const [selectedChannel, setSelectedChannel] = useState<string>("2");
@@ -50,6 +97,8 @@ export default function ChannelsPage() {
   const activeChannel = channels.find(c => c.id === selectedChannel);
   const rescuersChannel = channels.find(c => c.type === "rescuers");
   const gridChannels = channels.filter(c => c.type !== "rescuers");
+  const currentMembers = channelMembers[selectedChannel] || channelMembers["2"];
+  const currentMemberStyle = channelMemberStyles[selectedChannel] || channelMemberStyles["2"];
 
   return (
     <div className="mobile-container">
@@ -87,7 +136,7 @@ export default function ChannelsPage() {
         {/* Rescuers - Special full-width card */}
         {rescuersChannel && (
           <div className="mb-5 animate-slide-up" style={{ animationDelay: "200ms" }}>
-            <div className="bg-channel-rescuers rounded-2xl p-4 flex items-center justify-between">
+            <div className="channel-members-rescuers rounded-2xl p-4 flex items-center justify-between border border-status-danger/20">
               <div className="flex items-center gap-3">
                 <Avatar src={rescuersChannel.image} alt="Rescuers" size="lg" />
                 <div>
@@ -140,14 +189,14 @@ export default function ChannelsPage() {
                   {activeChannel?.name || "Friends"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Total {activeChannel?.memberCount || 9} Members
+                  Total {currentMembers.length} Members
                 </p>
               </div>
             </div>
 
-            {/* Members Preview */}
-            <div className="bg-channel-friends rounded-2xl p-4 flex items-center justify-between">
-              <AvatarGroup avatars={friendsMembers} max={5} size="lg" />
+            {/* Members Preview - Dynamic based on channel */}
+            <div className={`${currentMemberStyle} rounded-2xl p-4 flex items-center justify-between transition-all duration-300`}>
+              <AvatarGroup avatars={currentMembers} max={5} size="lg" />
               <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
                 <UserPlus className="w-5 h-5" />
               </button>
