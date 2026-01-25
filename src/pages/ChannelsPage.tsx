@@ -5,7 +5,8 @@ import { ChannelCard, ChannelType } from "@/components/ChannelCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Avatar, AvatarGroup } from "@/components/Avatar";
 import { SOSBadge } from "@/components/SOSBadge";
-import { Bell, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { useStatus } from "@/context/StatusContext";
 
 import avatar1 from "@/assets/avatars/avatar-1.jpg";
 import avatar2 from "@/assets/avatars/avatar-2.jpg";
@@ -23,13 +24,14 @@ interface Channel {
   isOnline: boolean;
   isLive?: boolean;
   image: string;
+  description?: string;
 }
 
 const channels: Channel[] = [
-  { id: "1", type: "unit", name: "Unit", memberCount: 4, isOnline: true, image: building1 },
-  { id: "2", type: "friends", name: "Friends", memberCount: 9, isOnline: true, image: avatar3 },
-  { id: "3", type: "management", name: "Management", memberCount: 3, isOnline: true, image: avatar2 },
-  { id: "4", type: "world", name: "Open World", memberCount: 123, isOnline: true, isLive: true, image: building2 },
+  { id: "1", type: "unit", name: "Unit", memberCount: 4, isOnline: true, image: building1, description: "4 Members in Unit" },
+  { id: "2", type: "friends", name: "Friends", memberCount: 9, isOnline: true, image: avatar3, description: "9 Members added as Friends" },
+  { id: "3", type: "management", name: "Management", memberCount: 3, isOnline: true, image: avatar2, description: "3 People" },
+  { id: "4", type: "world", name: "Open World", memberCount: 123, isOnline: true, isLive: true, image: building2, description: "123 Members LIVE" },
   { id: "5", type: "rescuers", name: "Rescuers", memberCount: 8, isOnline: false, image: avatar5 },
 ];
 
@@ -43,9 +45,11 @@ const friendsMembers = [
 
 export default function ChannelsPage() {
   const [selectedChannel, setSelectedChannel] = useState<string>("2");
-  const [currentStatus, setCurrentStatus] = useState<"safe" | "evacuating" | "danger">("safe");
+  const { currentStatus, setCurrentStatus } = useStatus();
 
   const activeChannel = channels.find(c => c.id === selectedChannel);
+  const rescuersChannel = channels.find(c => c.type === "rescuers");
+  const gridChannels = channels.filter(c => c.type !== "rescuers");
 
   return (
     <div className="mobile-container">
@@ -57,9 +61,9 @@ export default function ChannelsPage() {
           }
         />
 
-        {/* Channels Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {channels.slice(0, 4).map((channel, index) => (
+        {/* Channels Grid - 2x2 layout */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {gridChannels.slice(0, 4).map((channel, index) => (
             <div
               key={channel.id}
               className="animate-slide-up"
@@ -74,27 +78,30 @@ export default function ChannelsPage() {
                 image={channel.image}
                 selected={selectedChannel === channel.id}
                 onClick={() => setSelectedChannel(channel.id)}
+                description={channel.description}
               />
             </div>
           ))}
         </div>
 
-        {/* Rescuers (special styling) */}
-        <div className="mb-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
-          <div className="bg-channel-rescuers rounded-2xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar src={avatar5} alt="Rescuers" size="lg" />
-              <div>
-                <h4 className="font-display font-semibold text-foreground">Rescuers</h4>
-                <p className="text-sm text-muted-foreground">- OFFLINE -</p>
+        {/* Rescuers - Special full-width card */}
+        {rescuersChannel && (
+          <div className="mb-5 animate-slide-up" style={{ animationDelay: "200ms" }}>
+            <div className="bg-channel-rescuers rounded-2xl p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Avatar src={rescuersChannel.image} alt="Rescuers" size="lg" />
+                <div>
+                  <h4 className="font-display font-semibold text-foreground">{rescuersChannel.name}</h4>
+                  <p className="text-sm text-muted-foreground">- OFFLINE -</p>
+                </div>
               </div>
+              <SOSBadge size="md" pulse />
             </div>
-            <SOSBadge size="md" pulse />
           </div>
-        </div>
+        )}
 
         {/* Status Selection */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-2 scrollbar-none">
           <StatusBadge
             status="safe"
             selected={currentStatus === "safe"}
@@ -112,38 +119,39 @@ export default function ChannelsPage() {
           />
         </div>
 
-        {/* Draggable handle indicator */}
+        {/* Draggable handle */}
         <div className="flex justify-center mb-4">
           <div className="w-12 h-1.5 bg-muted rounded-full" />
         </div>
 
         {/* Current Channel Section */}
-        <div className="card-elevated animate-slide-up">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="relative">
+        <div className="animate-slide-up">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Channel</h3>
+          <div className="card-elevated">
+            <div className="flex items-center gap-3 mb-4">
               <Avatar 
                 src={activeChannel?.image || avatar3} 
                 alt={activeChannel?.name || "Channel"} 
                 size="lg" 
                 status="online"
               />
+              <div className="flex-1">
+                <h3 className="font-display font-bold text-lg text-foreground">
+                  {activeChannel?.name || "Friends"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Total {activeChannel?.memberCount || 9} Members
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-display font-bold text-lg text-foreground">
-                {activeChannel?.name || "Friends"}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Total {activeChannel?.memberCount || 9} Members
-              </p>
-            </div>
-          </div>
 
-          {/* Members Preview */}
-          <div className="bg-channel-friends rounded-2xl p-4 flex items-center justify-between">
-            <AvatarGroup avatars={friendsMembers} max={5} size="lg" />
-            <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
-              <UserPlus className="w-5 h-5" />
-            </button>
+            {/* Members Preview */}
+            <div className="bg-channel-friends rounded-2xl p-4 flex items-center justify-between">
+              <AvatarGroup avatars={friendsMembers} max={5} size="lg" />
+              <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
+                <UserPlus className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
