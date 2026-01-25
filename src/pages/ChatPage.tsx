@@ -57,9 +57,21 @@ const initialMessages: Message[] = [
   },
 ];
 
+const botResponses = [
+  "I understand your concern. Based on current conditions, I recommend taking the stairwell B route. It's currently clear and leads directly to the assembly point. Would you like me to share the route map?",
+  "The east exit is currently the safest path. Traffic is light and the route is fully illuminated. I'll guide you step by step.",
+  "Based on real-time data, the fire is moving north. I recommend heading south through the parking garage exit. Emergency teams are stationed there.",
+  "Your safety is my priority. The nearest assembly point is at the Central Plaza, about 300 meters from your current location. Shall I provide turn-by-turn directions?",
+  "I've checked with emergency services - they confirm the west corridor is clear. You can proceed safely. Do you need assistance with anything else?",
+  "Current air quality is within safe levels on floors 1-3. If you're on a higher floor, please cover your nose and mouth while descending.",
+  "Emergency responders have secured the perimeter. Please follow the green evacuation markers on the floor. Stay calm and move steadily.",
+  "I'm monitoring your building's sensors in real-time. The structural integrity is stable. Take your time and don't rush.",
+];
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [responseIndex, setResponseIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -87,11 +99,11 @@ export default function ChatPage() {
     setMessages([...messages, newMessage]);
     setInput("");
 
-    // Simulate bot response
+    // Get next unique response
     setTimeout(() => {
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I understand your concern. Based on current conditions, I recommend taking the stairwell B route. It's currently clear and leads directly to the assembly point. Would you like me to share the route map?",
+        content: botResponses[responseIndex % botResponses.length],
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isUser: false,
         sender: {
@@ -101,6 +113,7 @@ export default function ChatPage() {
         },
       };
       setMessages(prev => [...prev, botResponse]);
+      setResponseIndex(prev => prev + 1);
     }, 1000);
   };
 

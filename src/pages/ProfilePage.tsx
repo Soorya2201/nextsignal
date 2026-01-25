@@ -14,7 +14,9 @@ import {
 import { BottomNav } from "@/components/BottomNav";
 import { PageHeader } from "@/components/PageHeader";
 import { Avatar } from "@/components/Avatar";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Switch } from "@/components/ui/switch";
+import { useStatus } from "@/context/StatusContext";
 
 import avatar1 from "@/assets/avatars/avatar-1.jpg";
 
@@ -30,6 +32,7 @@ interface SettingsItem {
 export default function ProfilePage() {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const { currentStatus, setCurrentStatus } = useStatus();
 
   const settingsItems: SettingsItem[] = [
     { icon: Moon, label: "Dark mode", toggle: true, value: darkMode, onToggle: setDarkMode },
@@ -53,13 +56,38 @@ export default function ProfilePage() {
           }
         />
 
-        {/* Profile Card */}
+        {/* Profile Card with Status */}
         <div className="card-elevated mb-6 animate-slide-up">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 mb-4">
             <Avatar src={avatar1} alt="Soorya Venkat" size="xl" status="online" />
             <div className="flex-1">
               <h2 className="font-display font-bold text-xl text-foreground">Soorya Venkat</h2>
               <p className="text-muted-foreground">325 W Adams Blvd</p>
+            </div>
+          </div>
+          
+          {/* Current Status Display */}
+          <div className="pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-3">Your current status</p>
+            <div className="flex gap-2">
+              <StatusBadge
+                status="safe"
+                size="sm"
+                selected={currentStatus === "safe"}
+                onClick={() => setCurrentStatus("safe")}
+              />
+              <StatusBadge
+                status="evacuating"
+                size="sm"
+                selected={currentStatus === "evacuating"}
+                onClick={() => setCurrentStatus("evacuating")}
+              />
+              <StatusBadge
+                status="danger"
+                size="sm"
+                selected={currentStatus === "danger"}
+                onClick={() => setCurrentStatus("danger")}
+              />
             </div>
           </div>
         </div>

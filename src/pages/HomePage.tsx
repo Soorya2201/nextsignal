@@ -1,14 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { PageHeader } from "@/components/PageHeader";
 import { BuildingCard } from "@/components/BuildingCard";
 import { FilterChipGroup } from "@/components/FilterChip";
-import { Avatar } from "@/components/Avatar";
 
 import building1 from "@/assets/buildings/building-1.jpg";
 import building2 from "@/assets/buildings/building-2.jpg";
-import avatar1 from "@/assets/avatars/avatar-1.jpg";
 
 const buildings = [
   {
@@ -33,10 +32,15 @@ const filterOptions = ["Your", "Personal", "Work", "Public"];
 
 export default function HomePage() {
   const [filter, setFilter] = useState("Your");
+  const navigate = useNavigate();
 
   const filteredBuildings = filter === "Your" 
     ? buildings 
     : buildings.filter(b => b.category === filter);
+
+  const handleBuildingClick = (buildingId: string) => {
+    navigate(`/channels/${buildingId}`);
+  };
 
   return (
     <div className="mobile-container">
@@ -68,7 +72,7 @@ export default function HomePage() {
                 address={building.address}
                 image={building.image}
                 notifications={building.notifications}
-                onClick={() => console.log("Navigate to building", building.id)}
+                onClick={() => handleBuildingClick(building.id)}
               />
             </div>
           ))}
