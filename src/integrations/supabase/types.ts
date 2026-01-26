@@ -196,6 +196,86 @@ export type Database = {
         }
         Relationships: []
       }
+      location_floors: {
+        Row: {
+          created_at: string
+          floor_name: string
+          floor_number: number
+          id: string
+          location_id: string
+          units_per_floor: number
+        }
+        Insert: {
+          created_at?: string
+          floor_name: string
+          floor_number: number
+          id?: string
+          location_id: string
+          units_per_floor?: number
+        }
+        Update: {
+          created_at?: string
+          floor_name?: string
+          floor_number?: number
+          id?: string
+          location_id?: string
+          units_per_floor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_floors_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      location_units: {
+        Row: {
+          created_at: string
+          floor_id: string
+          id: string
+          location_id: string
+          position_index: number
+          unit_label: string | null
+          unit_number: string
+        }
+        Insert: {
+          created_at?: string
+          floor_id: string
+          id?: string
+          location_id: string
+          position_index?: number
+          unit_label?: string | null
+          unit_number: string
+        }
+        Update: {
+          created_at?: string
+          floor_id?: string
+          id?: string
+          location_id?: string
+          position_index?: number
+          unit_label?: string | null
+          unit_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_units_floor_id_fkey"
+            columns: ["floor_id"]
+            isOneToOne: false
+            referencedRelation: "location_floors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "location_units_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       locations: {
         Row: {
           address: string
@@ -259,26 +339,32 @@ export type Database = {
       user_locations: {
         Row: {
           category: string
+          floor_number: number | null
           id: string
           joined_at: string
           location_id: string
           nickname: string | null
+          unit_number: string | null
           user_id: string
         }
         Insert: {
           category?: string
+          floor_number?: number | null
           id?: string
           joined_at?: string
           location_id: string
           nickname?: string | null
+          unit_number?: string | null
           user_id: string
         }
         Update: {
           category?: string
+          floor_number?: number | null
           id?: string
           joined_at?: string
           location_id?: string
           nickname?: string | null
+          unit_number?: string | null
           user_id?: string
         }
         Relationships: [
