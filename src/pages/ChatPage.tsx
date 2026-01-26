@@ -1,19 +1,55 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, MoreVertical, Smile, Paperclip, Mic, Send, Trash2 } from "lucide-react";
+import { ArrowLeft, MoreVertical, Smile, Paperclip, Mic, Send, Trash2, Radio, AlertTriangle, AlertCircle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { BottomNav } from "@/components/BottomNav";
 import { Avatar } from "@/components/Avatar";
 import { SOSBadge } from "@/components/SOSBadge";
-import { useAIChat } from "@/hooks/useAIChat";
+import { useAIChat, ChatMessage } from "@/hooks/useAIChat";
+import { useBroadcasts, Broadcast } from "@/hooks/useBroadcasts";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import avatar1 from "@/assets/avatars/avatar-1.jpg";
 
+// Combined message type for rendering
+interface DisplayMessage {
+  id: string;
+  type: "chat" | "broadcast";
+  role?: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+  broadcast?: Broadcast;
+}
+
+const priorityConfig = {
+  normal: { icon: Info, color: "from-blue-500 to-cyan-400", label: "Notice" },
+  urgent: { icon: AlertCircle, color: "from-orange-500 to-yellow-400", label: "Urgent" },
+  critical: { icon: AlertTriangle, color: "from-red-500 to-pink-400", label: "Critical" },
+};
+
 export default function ChatPage() {
   const { messages, isLoading, sendMessage, clearChat } = useAIChat();
+  const { broadcasts } = useBroadcasts();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Combine chat messages and broadcasts, sorted by timestamp
+  const displayMessages: DisplayMessage[] = [
+    ...broadcasts.map((b) => ({
+      id: b.id,
+      type: "broadcast" as const,
+      content: b.message,
+      timestamp: new Date(b.created_at),
+      broadcast: b,
+    })),
+    ...messages.map((m) => ({
+      id: m.id,
+      type: "chat" as const,
+      role: m.role,
+      content: m.content,
+      timestamp: m.timestamp,
+    })),
+  ].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -21,13 +57,112 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isLoading]);
+  }, [displayMessages, isLoading]);
 
   const handleSend = () => {
     if (!input.trim() || isLoading) return;
     sendMessage(input);
     setInput("");
   };
+
+  const renderBroadcast = (msg: DisplayMessage) => {
+    const broadcast = msg.broadcast!;
+    const config = priorityConfig[broadcast.priority as keyof typeof priorityConfig] || priorityConfig.normal;
+    const Icon = config.icon;
+
+    return (
+      <div key={msg.id} className="flex gap-3 animate-slide-up">
+        <div className={cn(
+          "w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r",
+          config.color
+        )}>
+          <Radio className="w-5 h-5 text-white" />
+        </div>
+        
+        <div className="flex-1 flex flex-col items-start">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-semibold text-foreground">Management Alert</span>
+            <span className={cn(
+              "text-xs px-2 py-0.5 rounded-full text-white bg-gradient-to-r",
+              config.color
+            )}>
+              <Icon className="w-3 h-3 inline mr-1" />
+              {config.label}
+            </span>
+          </div>
+          
+          <div className={cn(
+            "w-full rounded-2xl p-4 border-2",
+            broadcast.priority === "critical" && "border-red-500/50 bg-red-500/10",
+            broadcast.priority === "urgent" && "border-orange-500/50 bg-orange-500/10",
+            broadcast.priority === "normal" && "border-blue-500/50 bg-blue-500/10"
+          )}>
+            <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <Icon className={cn(
+                "w-4 h-4",
+                broadcast.priority === "critical" && "text-red-500",
+                broadcast.priority === "urgent" && "text-orange-500",
+                broadcast.priority === "normal" && "text-blue-500"
+              )} />
+              {broadcast.title}
+            </h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">{broadcast.message}</p>
+          </div>
+          
+          <span className="text-xs text-muted-foreground mt-1">
+            {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderChatMessage = (msg: DisplayMessage) => (
+    <div
+      key={msg.id}
+      className={cn(
+        "flex gap-3 animate-slide-up",
+        msg.role === "user" ? "flex-row-reverse" : "flex-row"
+      )}
+    >
+      {msg.role === "assistant" && (
+        <Avatar src={logo} alt="AI" size="md" status="online" />
+      )}
+      
+      <div className={cn(
+        "flex flex-col",
+        msg.role === "user" ? "items-end" : "items-start"
+      )}>
+        {msg.role === "assistant" && (
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-sm font-semibold text-primary">Next Signal Bot</span>
+            <span className="text-xs text-muted-foreground">AI Assistant</span>
+          </div>
+        )}
+        
+        <div className={cn(
+          "chat-bubble",
+          msg.role === "user" ? "chat-bubble-user" : "chat-bubble-bot"
+        )}>
+          {msg.role === "assistant" ? (
+            <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+              <ReactMarkdown>{msg.content}</ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed">{msg.content}</p>
+          )}
+        </div>
+        
+        <span className="text-xs text-muted-foreground mt-1">
+          {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
+      
+      {msg.role === "user" && (
+        <Avatar src={avatar1} alt="You" size="md" status="online" />
+      )}
+    </div>
+  );
 
   return (
     <div className="mobile-container flex flex-col h-screen">
@@ -58,7 +193,7 @@ export default function ChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-background to-secondary/10">
-        {messages.length === 0 ? (
+        {displayMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-8">
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-3xl blur-xl opacity-30" />
@@ -87,52 +222,9 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex gap-3 animate-slide-up",
-                message.role === "user" ? "flex-row-reverse" : "flex-row"
-              )}
-            >
-              {message.role === "assistant" && (
-                <Avatar src={logo} alt="AI" size="md" status="online" />
-              )}
-              
-              <div className={cn(
-                "flex flex-col",
-                message.role === "user" ? "items-end" : "items-start"
-              )}>
-                {message.role === "assistant" && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-primary">Next Signal Bot</span>
-                    <span className="text-xs text-muted-foreground">AI Assistant</span>
-                  </div>
-                )}
-                
-                <div className={cn(
-                  "chat-bubble",
-                  message.role === "user" ? "chat-bubble-user" : "chat-bubble-bot"
-                )}>
-                  {message.role === "assistant" ? (
-                    <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                  )}
-                </div>
-                
-                <span className="text-xs text-muted-foreground mt-1">
-                  {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-              
-              {message.role === "user" && (
-                <Avatar src={avatar1} alt="You" size="md" status="online" />
-              )}
-            </div>
-          ))
+          displayMessages.map((msg) =>
+            msg.type === "broadcast" ? renderBroadcast(msg) : renderChatMessage(msg)
+          )
         )}
         
         {isLoading && messages[messages.length - 1]?.role === "user" && (
