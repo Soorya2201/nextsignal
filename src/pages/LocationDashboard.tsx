@@ -123,8 +123,11 @@ export default function LocationDashboard() {
   };
 
   const handleEmergencyAlert = () => {
-    // Navigate to emergency broadcast or trigger SOS
-    navigate(`/broadcast?location=${locationId}`);
+    navigate(`/emergency-report?location=${locationId}`);
+  };
+
+  const handleHazardMap = () => {
+    navigate(`/hazard-map?location=${locationId}`);
   };
 
   if (loading) {
@@ -244,6 +247,23 @@ export default function LocationDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Hazard Map Button */}
+        <button
+          onClick={handleHazardMap}
+          className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-2xl p-4 flex items-center justify-between mb-4 hover:scale-[1.01] transition-transform shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+              <Map className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-white">Hazard Map</p>
+              <p className="text-xs text-white/80">View danger zones & safe areas</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white" />
+        </button>
 
         {/* Voice Channels Button */}
         <button

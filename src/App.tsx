@@ -15,6 +15,8 @@ import ManagementDashboard from "./pages/ManagementDashboard";
 import ManagementLoginPage from "./pages/ManagementLoginPage";
 import RoleDashboard from "./pages/RoleDashboard";
 import BroadcastPage from "./pages/BroadcastPage";
+import EmergencyReportPage from "./pages/EmergencyReportPage";
+import HazardMapPage from "./pages/HazardMapPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +40,8 @@ const App = () => (
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/dashboard" element={<RoleDashboard />} />
               <Route path="/broadcast" element={<BroadcastPage />} />
+              <Route path="/emergency-report" element={<EmergencyReportPage />} />
+              <Route path="/hazard-map" element={<HazardMapPage />} />
               <Route path="/management" element={<ManagementDashboard />} />
               <Route path="/management/login" element={<ManagementLoginPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
