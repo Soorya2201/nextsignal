@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Moon, 
   User, 
@@ -9,14 +9,19 @@ import {
   Lock, 
   Info,
   ChevronRight,
-  Search
+  Search,
+  LogOut,
+  LogIn
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { PageHeader } from "@/components/PageHeader";
 import { Avatar } from "@/components/Avatar";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { useStatus } from "@/context/StatusContext";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 import avatar1 from "@/assets/avatars/avatar-1.jpg";
 
@@ -32,7 +37,31 @@ interface SettingsItem {
 export default function ProfilePage() {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
   const { currentStatus, setCurrentStatus } = useStatus();
+  const { user, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (data) setProfile(data);
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   const settingsItems: SettingsItem[] = [
     { icon: Moon, label: "Dark mode", toggle: true, value: darkMode, onToggle: setDarkMode },
@@ -43,6 +72,35 @@ export default function ProfilePage() {
     { icon: Lock, label: "Privacy and security", href: "/profile/privacy" },
     { icon: Info, label: "About", href: "/profile/about" },
   ];
+
+  // Not logged in state
+  if (!loading && !user) {
+    return (
+      <div className="mobile-container">
+        <div className="page-content">
+          <PageHeader title="Settings" />
+          
+          <div className="card-elevated mb-6 animate-slide-up text-center py-8">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+              <LogIn className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h2 className="font-display font-bold text-xl text-foreground mb-2">
+              Sign in to view your profile
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Access your settings and manage your account
+            </p>
+            <Link to="/auth">
+              <Button className="gradient-primary border-0">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="mobile-container">
@@ -59,10 +117,12 @@ export default function ProfilePage() {
         {/* Profile Card with Status */}
         <div className="card-elevated mb-6 animate-slide-up">
           <div className="flex items-center gap-4 mb-4">
-            <Avatar src={avatar1} alt="Soorya Venkat" size="xl" status="online" />
+            <Avatar src={avatar1} alt={profile?.full_name || "User"} size="xl" status="online" />
             <div className="flex-1">
-              <h2 className="font-display font-bold text-xl text-foreground">Soorya Venkat</h2>
-              <p className="text-muted-foreground">325 W Adams Blvd</p>
+              <h2 className="font-display font-bold text-xl text-foreground">
+                {profile?.full_name || user?.email?.split("@")[0] || "User"}
+              </h2>
+              <p className="text-muted-foreground">{user?.email}</p>
             </div>
           </div>
           
@@ -130,6 +190,19 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+
+        {/* Sign out button */}
+        <button
+          onClick={handleSignOut}
+          className="flex items-center justify-between py-4 px-2 hover:bg-destructive/10 rounded-xl transition-colors w-full mt-4"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+              <LogOut className="w-5 h-5 text-destructive" />
+            </div>
+            <span className="font-medium text-destructive">Sign out</span>
+          </div>
+        </button>
 
         {/* Version info */}
         <p className="text-center text-sm text-muted-foreground mt-8 mb-4">
