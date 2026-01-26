@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { RoleSelector } from "@/components/RoleSelector";
+import type { AppRole } from "@/hooks/useUserRole";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
 
@@ -20,6 +22,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [selectedRole, setSelectedRole] = useState<AppRole | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; fullName?: string }>({});
@@ -30,6 +33,16 @@ export default function AuthPage() {
     try {
       authSchema.parse({ email, password, fullName: isLogin ? undefined : fullName });
       setErrors({});
+      
+      if (!isLogin && !selectedRole) {
+        toast({
+          title: "Role Required",
+          description: "Please select your role to continue",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -60,13 +73,30 @@ export default function AuthPage() {
         });
         if (error) throw error;
         
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully logged in.",
-        });
-        navigate("/");
+        // Check user role and redirect accordingly
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          const userRole = roleData?.role as AppRole | null;
+          
+          toast({
+            title: "Welcome back!",
+            description: "You've successfully logged in.",
+          });
+
+          if (userRole === "management" || userRole === "rescuer") {
+            navigate("/dashboard");
+          } else {
+            navigate("/");
+          }
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -77,17 +107,35 @@ export default function AuthPage() {
           },
         });
         if (error) throw error;
+
+        // Insert user role
+        if (signUpData.user && selectedRole) {
+          const { error: roleError } = await supabase.from("user_roles").insert({
+            user_id: signUpData.user.id,
+            role: selectedRole,
+          });
+          if (roleError) console.error("Role insert error:", roleError);
+        }
         
         toast({
           title: "Account created!",
           description: "Welcome to Next Signal.",
         });
-        navigate("/");
+
+        if (selectedRole === "management" || selectedRole === "rescuer") {
+          navigate("/dashboard");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
+      let message = error.message || "Something went wrong";
+      if (message.includes("already registered")) {
+        message = "This email is already registered. Please sign in instead.";
+      }
       toast({
         title: "Error",
-        description: error.message || "Something went wrong",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -109,9 +157,14 @@ export default function AuthPage() {
 
         {/* Logo and header */}
         <div className="flex items-center gap-3 mb-8">
-          <img src={logo} alt="Next Signal" className="w-14 h-14" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-2xl blur-lg opacity-50" />
+            <img src={logo} alt="Next Signal" className="relative w-16 h-16 rounded-2xl" />
+          </div>
           <div>
-            <h1 className="text-2xl font-display font-bold text-foreground">Next SIGNAL</h1>
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Next SIGNAL
+            </h1>
             <p className="text-sm text-muted-foreground">Emergency Response System</p>
           </div>
         </div>
@@ -131,20 +184,28 @@ export default function AuthPage() {
 
           <form onSubmit={handleAuth} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="h-12"
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="h-12"
+                  />
+                  {errors.fullName && (
+                    <p className="text-sm text-destructive">{errors.fullName}</p>
+                  )}
+                </div>
+
+                <RoleSelector
+                  selectedRole={selectedRole}
+                  onSelect={setSelectedRole}
+                  disabled={isLoading}
                 />
-                {errors.fullName && (
-                  <p className="text-sm text-destructive">{errors.fullName}</p>
-                )}
-              </div>
+              </>
             )}
 
             <div className="space-y-2">
@@ -215,6 +276,7 @@ export default function AuthPage() {
                 onClick={() => {
                   setIsLogin(!isLogin);
                   setErrors({});
+                  setSelectedRole(null);
                 }}
                 className="text-primary hover:underline font-medium"
               >
@@ -222,16 +284,6 @@ export default function AuthPage() {
               </button>
             </p>
           </div>
-        </div>
-
-        {/* Management link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Are you a building manager?{" "}
-            <a href="/management/login" className="text-primary hover:underline font-medium">
-              Access Management Portal
-            </a>
-          </p>
         </div>
       </div>
     </div>

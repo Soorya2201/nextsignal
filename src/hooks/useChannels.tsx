@@ -20,7 +20,16 @@ export interface Channel {
   is_live: boolean;
   image_url: string | null;
   members?: ChannelMember[];
+  memberCount?: number;
+  isEditable?: boolean;
 }
+
+// Default member counts for special channels
+const CHANNEL_DEFAULTS: Record<string, { memberCount: number; isEditable: boolean }> = {
+  management: { memberCount: 3, isEditable: false },
+  world: { memberCount: 135, isEditable: true },
+  rescuers: { memberCount: 0, isEditable: false },
+};
 
 export function useChannels(locationId: string | undefined) {
   const { user } = useAuth();
@@ -60,15 +69,23 @@ export function useChannels(locationId: string | undefined) {
         membersData = data || [];
       }
 
-      // Combine channels with their members
-      const channelsWithMembers = channelsData?.map((channel) => ({
-        ...channel,
-        type: channel.type as Channel["type"],
-        members: membersData.filter((m) => m.channel_id === channel.id).map((m) => ({
+      // Combine channels with their members and apply defaults
+      const channelsWithMembers = channelsData?.map((channel) => {
+        const channelType = channel.type as Channel["type"];
+        const defaults = CHANNEL_DEFAULTS[channelType];
+        const actualMembers = membersData.filter((m) => m.channel_id === channel.id).map((m) => ({
           ...m,
           status: m.status as ChannelMember["status"],
-        })),
-      })) || [];
+        }));
+
+        return {
+          ...channel,
+          type: channelType,
+          members: actualMembers,
+          memberCount: defaults?.memberCount ?? actualMembers.length,
+          isEditable: defaults?.isEditable ?? true,
+        };
+      }) || [];
 
       setChannels(channelsWithMembers);
     } catch (err: any) {

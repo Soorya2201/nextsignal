@@ -1,77 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, MoreVertical, Smile, Paperclip, Mic, Send } from "lucide-react";
+import { ArrowLeft, MoreVertical, Smile, Paperclip, Mic, Send, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import { BottomNav } from "@/components/BottomNav";
-import { ChatMessage } from "@/components/ChatMessage";
+import { Avatar } from "@/components/Avatar";
 import { SOSBadge } from "@/components/SOSBadge";
-
-import avatar1 from "@/assets/avatars/avatar-1.jpg";
-import avatar2 from "@/assets/avatars/avatar-2.jpg";
+import { useAIChat } from "@/hooks/useAIChat";
+import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
-
-interface Message {
-  id: string;
-  content: string;
-  timestamp: string;
-  isUser: boolean;
-  sender?: {
-    name: string;
-    avatar?: string;
-    role?: string;
-  };
-  images?: string[];
-}
-
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    content: "The Forest Fire has started, from the west start evacuating from 9:00 AM PST to avoid Commotion.",
-    timestamp: "16:04",
-    isUser: false,
-    sender: {
-      name: "Mike Mazowski",
-      avatar: avatar2,
-      role: "admin",
-    },
-  },
-  {
-    id: "2",
-    content: "Can I leave at 9 AM PST?",
-    timestamp: "16:04",
-    isUser: true,
-    sender: {
-      name: "You",
-      avatar: avatar1,
-    },
-  },
-  {
-    id: "3",
-    content: "Yes, that would be ideal. Please use the East exit and follow the evacuation markers. I'll send you the safest route now.",
-    timestamp: "16:05",
-    isUser: false,
-    sender: {
-      name: "Next Signal Bot",
-      avatar: logo,
-      role: "AI Assistant",
-    },
-  },
-];
-
-const botResponses = [
-  "I understand your concern. Based on current conditions, I recommend taking the stairwell B route. It's currently clear and leads directly to the assembly point. Would you like me to share the route map?",
-  "The east exit is currently the safest path. Traffic is light and the route is fully illuminated. I'll guide you step by step.",
-  "Based on real-time data, the fire is moving north. I recommend heading south through the parking garage exit. Emergency teams are stationed there.",
-  "Your safety is my priority. The nearest assembly point is at the Central Plaza, about 300 meters from your current location. Shall I provide turn-by-turn directions?",
-  "I've checked with emergency services - they confirm the west corridor is clear. You can proceed safely. Do you need assistance with anything else?",
-  "Current air quality is within safe levels on floors 1-3. If you're on a higher floor, please cover your nose and mouth while descending.",
-  "Emergency responders have secured the perimeter. Please follow the green evacuation markers on the floor. Stay calm and move steadily.",
-  "I'm monitoring your building's sensors in real-time. The structural integrity is stable. Take your time and don't rush.",
-];
+import avatar1 from "@/assets/avatars/avatar-1.jpg";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { messages, isLoading, sendMessage, clearChat } = useAIChat();
   const [input, setInput] = useState("");
-  const [responseIndex, setResponseIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -80,47 +21,18 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      isUser: true,
-      sender: {
-        name: "You",
-        avatar: avatar1,
-      },
-    };
-
-    setMessages([...messages, newMessage]);
+    if (!input.trim() || isLoading) return;
+    sendMessage(input);
     setInput("");
-
-    // Get next unique response
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: botResponses[responseIndex % botResponses.length],
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        isUser: false,
-        sender: {
-          name: "Next Signal Bot",
-          avatar: logo,
-          role: "AI Assistant",
-        },
-      };
-      setMessages(prev => [...prev, botResponse]);
-      setResponseIndex(prev => prev + 1);
-    }, 1000);
   };
 
   return (
     <div className="mobile-container flex flex-col h-screen">
       {/* Header */}
-      <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
+      <header className="flex items-center gap-3 p-4 bg-card/80 backdrop-blur-lg border-b border-border">
         <Link to="/" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </Link>
@@ -128,61 +40,145 @@ export default function ChatPage() {
         <div className="flex-1">
           <h1 className="font-display font-bold text-lg text-foreground">Next SIGNAL</h1>
           <p className="text-xs text-status-safe flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-status-safe" />
-            1 update
+            <span className="w-2 h-2 rounded-full bg-status-safe animate-pulse" />
+            AI Assistant Online
           </p>
         </div>
+        <button 
+          onClick={clearChat}
+          className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+          title="Clear chat"
+        >
+          <Trash2 className="w-5 h-5 text-muted-foreground" />
+        </button>
         <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
           <MoreVertical className="w-5 h-5 text-muted-foreground" />
         </button>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
-        {messages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            content={message.content}
-            timestamp={message.timestamp}
-            isUser={message.isUser}
-            sender={message.sender}
-            images={message.images}
-          />
-        ))}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-background to-secondary/10">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-8">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-3xl blur-xl opacity-30" />
+              <img src={logo} alt="Next Signal" className="relative w-24 h-24 rounded-3xl" />
+            </div>
+            <h2 className="text-xl font-display font-bold text-foreground mb-2">
+              Next Signal AI Assistant
+            </h2>
+            <p className="text-muted-foreground text-sm max-w-xs">
+              I'm here to help you stay safe during emergencies. Ask me about evacuation routes, safety tips, or any emergency-related questions.
+            </p>
+            <div className="mt-6 space-y-2 w-full max-w-xs">
+              {[
+                "What should I do during a fire?",
+                "How do I prepare an emergency kit?",
+                "What are the evacuation routes?",
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => sendMessage(suggestion)}
+                  className="w-full p-3 text-sm text-left rounded-xl bg-card border border-border hover:border-primary/50 transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <div
+              key={message.id}
+              className={cn(
+                "flex gap-3 animate-slide-up",
+                message.role === "user" ? "flex-row-reverse" : "flex-row"
+              )}
+            >
+              {message.role === "assistant" && (
+                <Avatar src={logo} alt="AI" size="md" status="online" />
+              )}
+              
+              <div className={cn(
+                "flex flex-col",
+                message.role === "user" ? "items-end" : "items-start"
+              )}>
+                {message.role === "assistant" && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-primary">Next Signal Bot</span>
+                    <span className="text-xs text-muted-foreground">AI Assistant</span>
+                  </div>
+                )}
+                
+                <div className={cn(
+                  "chat-bubble",
+                  message.role === "user" ? "chat-bubble-user" : "chat-bubble-bot"
+                )}>
+                  {message.role === "assistant" ? (
+                    <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                  )}
+                </div>
+                
+                <span className="text-xs text-muted-foreground mt-1">
+                  {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              
+              {message.role === "user" && (
+                <Avatar src={avatar1} alt="You" size="md" status="online" />
+              )}
+            </div>
+          ))
+        )}
+        
+        {isLoading && messages[messages.length - 1]?.role === "user" && (
+          <div className="flex gap-3 animate-slide-up">
+            <Avatar src={logo} alt="AI" size="md" status="online" />
+            <div className="flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-semibold text-primary">Next Signal Bot</span>
+                <span className="text-xs text-muted-foreground">typing...</span>
+              </div>
+              <div className="chat-bubble chat-bubble-bot">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Channel indicator */}
-      <div className="px-4 py-2 bg-card border-t border-border">
-        <button className="flex items-center gap-2 text-sm text-primary font-medium">
-          <span className="text-muted-foreground">#</span>
-          General
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          </svg>
-        </button>
-      </div>
-
       {/* Input */}
-      <div className="p-4 bg-card border-t border-border mb-16">
+      <div className="p-4 bg-card/80 backdrop-blur-lg border-t border-border mb-16">
         <div className="flex items-center gap-3">
           <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
             <Smile className="w-5 h-5 text-muted-foreground" />
           </button>
           <input
             type="text"
-            placeholder="Write a message..."
+            placeholder="Ask about safety or emergencies..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             className="input-message"
+            disabled={isLoading}
           />
           <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-muted transition-colors">
             <Paperclip className="w-5 h-5 text-muted-foreground" />
           </button>
           <button 
             onClick={handleSend}
-            className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground hover:scale-105 transition-transform"
+            disabled={isLoading || !input.trim()}
+            className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center text-primary-foreground hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
           >
             {input.trim() ? <Send className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>

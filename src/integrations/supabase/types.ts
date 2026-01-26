@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      blueprints: {
+        Row: {
+          created_at: string
+          file_url: string
+          id: string
+          location_id: string
+          name: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_url: string
+          id?: string
+          location_id: string
+          name: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string
+          id?: string
+          location_id?: string
+          name?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blueprints_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broadcasts: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          message: string
+          priority: string
+          sender_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          message: string
+          priority?: string
+          sender_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          message?: string
+          priority?: string
+          sender_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcasts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_members: {
         Row: {
           avatar_url: string | null
@@ -99,6 +172,30 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           address: string
@@ -130,6 +227,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          crisis_status: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -139,6 +237,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          crisis_status?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -148,6 +247,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          crisis_status?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -191,15 +291,42 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "resident" | "management" | "rescuer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -326,6 +453,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["resident", "management", "rescuer"],
+    },
   },
 } as const

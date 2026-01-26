@@ -12,6 +12,8 @@ import BuildingChannelsPage from "./pages/BuildingChannelsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ManagementDashboard from "./pages/ManagementDashboard";
 import ManagementLoginPage from "./pages/ManagementLoginPage";
+import RoleDashboard from "./pages/RoleDashboard";
+import BroadcastPage from "./pages/BroadcastPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +34,8 @@ const App = () => (
               <Route path="/channels" element={<ChannelsPage />} />
               <Route path="/channels/:buildingId" element={<BuildingChannelsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/dashboard" element={<RoleDashboard />} />
+              <Route path="/broadcast" element={<BroadcastPage />} />
               <Route path="/management" element={<ManagementDashboard />} />
               <Route path="/management/login" element={<ManagementLoginPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
