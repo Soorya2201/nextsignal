@@ -7,8 +7,8 @@ import { StatusProvider } from "@/context/StatusContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import HomePage from "./pages/HomePage";
 import ChatPage from "./pages/ChatPage";
-import ChannelsPage from "./pages/ChannelsPage";
 import BuildingChannelsPage from "./pages/BuildingChannelsPage";
+import { Navigate } from "react-router-dom";
 import LocationDashboard from "./pages/LocationDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import ManagementDashboard from "./pages/ManagementDashboard";
@@ -32,7 +32,7 @@ const App = () => (
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/chat" element={<ChatPage />} />
-              <Route path="/channels" element={<ChannelsPage />} />
+              <Route path="/channels" element={<Navigate to="/channels/783ed81e-8d8e-4b23-96f9-751f55615f9a" replace />} />
               <Route path="/channels/:buildingId" element={<BuildingChannelsPage />} />
               <Route path="/location/:locationId" element={<LocationDashboard />} />
               <Route path="/profile" element={<ProfilePage />} />
