@@ -9,6 +9,7 @@ import HomePage from "./pages/HomePage";
 import ChatPage from "./pages/ChatPage";
 import ChannelsPage from "./pages/ChannelsPage";
 import BuildingChannelsPage from "./pages/BuildingChannelsPage";
+import LocationDashboard from "./pages/LocationDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import ManagementDashboard from "./pages/ManagementDashboard";
 import ManagementLoginPage from "./pages/ManagementLoginPage";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/channels" element={<ChannelsPage />} />
               <Route path="/channels/:buildingId" element={<BuildingChannelsPage />} />
+              <Route path="/location/:locationId" element={<LocationDashboard />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/dashboard" element={<RoleDashboard />} />
               <Route path="/broadcast" element={<BroadcastPage />} />
