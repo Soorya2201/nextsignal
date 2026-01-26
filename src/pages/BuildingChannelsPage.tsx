@@ -1,164 +1,83 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { BottomNav } from "@/components/BottomNav";
 import { ChannelCard, ChannelType } from "@/components/ChannelCard";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Avatar, AvatarGroup } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
 import { SOSBadge } from "@/components/SOSBadge";
-import { UserPlus, ArrowLeft } from "lucide-react";
+import { AddMemberModal } from "@/components/AddMemberModal";
+import { ChannelMembersList } from "@/components/ChannelMembersList";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useStatus } from "@/context/StatusContext";
-
-import avatar1 from "@/assets/avatars/avatar-1.jpg";
-import avatar2 from "@/assets/avatars/avatar-2.jpg";
-import avatar3 from "@/assets/avatars/avatar-3.jpg";
-import avatar4 from "@/assets/avatars/avatar-4.jpg";
-import avatar5 from "@/assets/avatars/avatar-5.jpg";
-import avatar6 from "@/assets/avatars/avatar-6.jpg";
-import avatar7 from "@/assets/avatars/avatar-7.jpg";
-import avatar8 from "@/assets/avatars/avatar-8.jpg";
-import avatar9 from "@/assets/avatars/avatar-9.jpg";
-import avatar10 from "@/assets/avatars/avatar-10.jpg";
-import avatar11 from "@/assets/avatars/avatar-11.jpg";
-import avatar12 from "@/assets/avatars/avatar-12.jpg";
-import building1 from "@/assets/buildings/building-1.jpg";
-import building2 from "@/assets/buildings/building-2.jpg";
-
-interface Channel {
-  id: string;
-  type: ChannelType;
-  name: string;
-  memberCount: number;
-  isOnline: boolean;
-  isLive?: boolean;
-  image: string;
-  description?: string;
-}
-
-const buildingChannels: Record<string, Channel[]> = {
-  "1": [
-    { id: "1", type: "unit", name: "Unit", memberCount: 4, isOnline: true, image: building1, description: "4 Members in Unit" },
-    { id: "2", type: "friends", name: "Friends", memberCount: 9, isOnline: true, image: avatar3, description: "9 Members added as Friends" },
-    { id: "3", type: "management", name: "Management", memberCount: 3, isOnline: true, image: avatar2, description: "3 People" },
-    { id: "4", type: "world", name: "Open World", memberCount: 123, isOnline: true, isLive: true, image: building2, description: "123 Members LIVE" },
-    { id: "5", type: "rescuers", name: "Rescuers", memberCount: 8, isOnline: false, image: avatar5 },
-  ],
-  "2": [
-    { id: "1", type: "unit", name: "Office Floor 3", memberCount: 12, isOnline: true, image: building2, description: "12 Colleagues" },
-    { id: "2", type: "friends", name: "Work Buddies", memberCount: 5, isOnline: true, image: avatar4, description: "5 Work Friends" },
-    { id: "3", type: "management", name: "HR & Admin", memberCount: 4, isOnline: true, image: avatar2, description: "4 Staff" },
-    { id: "4", type: "world", name: "Building Lobby", memberCount: 89, isOnline: true, isLive: true, image: building2, description: "89 Members LIVE" },
-    { id: "5", type: "rescuers", name: "Security Team", memberCount: 6, isOnline: false, image: avatar5 },
-  ],
-};
-
-const buildingNames: Record<string, string> = {
-  "1": "Home",
-  "2": "Work",
-};
-
-// Dynamic members for each channel per building
-const buildingChannelMembers: Record<string, Record<string, { src: string; alt: string; status: "safe" | "evacuating" | "danger" }[]>> = {
-  "1": {
-    "1": [ // Unit - Home
-      { src: avatar1, alt: "Soorya", status: "safe" },
-      { src: avatar6, alt: "Priya", status: "safe" },
-      { src: avatar9, alt: "Kevin", status: "evacuating" },
-      { src: avatar12, alt: "James", status: "safe" },
-    ],
-    "2": [ // Friends - Home
-      { src: avatar1, alt: "Soorya", status: "safe" },
-      { src: avatar2, alt: "Mike", status: "safe" },
-      { src: avatar3, alt: "Marvin", status: "evacuating" },
-      { src: avatar4, alt: "Gregory", status: "safe" },
-      { src: avatar5, alt: "Samuel", status: "danger" },
-      { src: avatar8, alt: "Lisa", status: "safe" },
-      { src: avatar11, alt: "Fatima", status: "safe" },
-    ],
-    "3": [ // Management - Home
-      { src: avatar2, alt: "Mike", status: "safe" },
-      { src: avatar7, alt: "Robert", status: "safe" },
-      { src: avatar10, alt: "Carlos", status: "safe" },
-    ],
-    "4": [ // Open World - Home
-      { src: avatar6, alt: "Priya", status: "safe" },
-      { src: avatar7, alt: "Robert", status: "evacuating" },
-      { src: avatar8, alt: "Lisa", status: "safe" },
-      { src: avatar9, alt: "Kevin", status: "danger" },
-      { src: avatar10, alt: "Carlos", status: "safe" },
-      { src: avatar11, alt: "Fatima", status: "evacuating" },
-      { src: avatar12, alt: "James", status: "safe" },
-    ],
-    "5": [ // Rescuers - Home
-      { src: avatar5, alt: "Samuel", status: "safe" },
-      { src: avatar7, alt: "Robert", status: "safe" },
-      { src: avatar10, alt: "Carlos", status: "safe" },
-      { src: avatar12, alt: "James", status: "safe" },
-    ],
-  },
-  "2": {
-    "1": [ // Unit - Work
-      { src: avatar6, alt: "Priya", status: "safe" },
-      { src: avatar7, alt: "Robert", status: "safe" },
-      { src: avatar8, alt: "Lisa", status: "safe" },
-      { src: avatar9, alt: "Kevin", status: "evacuating" },
-      { src: avatar10, alt: "Carlos", status: "safe" },
-      { src: avatar11, alt: "Fatima", status: "safe" },
-    ],
-    "2": [ // Friends - Work
-      { src: avatar4, alt: "Gregory", status: "safe" },
-      { src: avatar8, alt: "Lisa", status: "safe" },
-      { src: avatar9, alt: "Kevin", status: "evacuating" },
-      { src: avatar11, alt: "Fatima", status: "safe" },
-      { src: avatar12, alt: "James", status: "danger" },
-    ],
-    "3": [ // Management - Work
-      { src: avatar2, alt: "Mike", status: "safe" },
-      { src: avatar7, alt: "Robert", status: "safe" },
-      { src: avatar10, alt: "Carlos", status: "safe" },
-      { src: avatar6, alt: "Priya", status: "safe" },
-    ],
-    "4": [ // Open World - Work
-      { src: avatar1, alt: "Soorya", status: "safe" },
-      { src: avatar3, alt: "Marvin", status: "evacuating" },
-      { src: avatar5, alt: "Samuel", status: "safe" },
-      { src: avatar6, alt: "Priya", status: "safe" },
-      { src: avatar8, alt: "Lisa", status: "danger" },
-      { src: avatar12, alt: "James", status: "safe" },
-    ],
-    "5": [ // Rescuers - Work
-      { src: avatar5, alt: "Samuel", status: "safe" },
-      { src: avatar7, alt: "Robert", status: "safe" },
-      { src: avatar10, alt: "Carlos", status: "safe" },
-      { src: avatar2, alt: "Mike", status: "safe" },
-      { src: avatar11, alt: "Fatima", status: "safe" },
-      { src: avatar12, alt: "James", status: "safe" },
-    ],
-  },
-};
-
-// CSS class for each channel member section
-const channelMemberStyles: Record<string, string> = {
-  "1": "channel-members-unit",
-  "2": "channel-members-friends",
-  "3": "channel-members-management",
-  "4": "channel-members-world",
-  "5": "channel-members-rescuers",
-};
+import { useAuth } from "@/hooks/useAuth";
+import { useChannels, Channel } from "@/hooks/useChannels";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function BuildingChannelsPage() {
   const { buildingId } = useParams<{ buildingId: string }>();
-  const [selectedChannel, setSelectedChannel] = useState<string>("2");
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { currentStatus, setCurrentStatus } = useStatus();
-
-  const channels = buildingChannels[buildingId || "1"] || buildingChannels["1"];
-  const buildingName = buildingNames[buildingId || "1"] || "Building";
-  const activeChannel = channels.find(c => c.id === selectedChannel);
-  const rescuersChannel = channels.find(c => c.type === "rescuers");
-  const gridChannels = channels.filter(c => c.type !== "rescuers");
+  const { channels, loading, addMember, removeMember } = useChannels(buildingId);
   
-  const buildingMembers = buildingChannelMembers[buildingId || "1"] || buildingChannelMembers["1"];
-  const currentMembers = buildingMembers[selectedChannel] || buildingMembers["2"];
-  const currentMemberStyle = channelMemberStyles[selectedChannel] || channelMemberStyles["2"];
+  const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const [locationName, setLocationName] = useState<string>("Location");
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+    }
+  }, [user, navigate]);
+
+  // Fetch location details
+  useEffect(() => {
+    const fetchLocation = async () => {
+      if (!buildingId) return;
+      
+      const { data } = await supabase
+        .from("locations")
+        .select("name")
+        .eq("id", buildingId)
+        .single();
+      
+      if (data) {
+        setLocationName(data.name);
+      }
+    };
+    
+    fetchLocation();
+  }, [buildingId]);
+
+  // Set initial selected channel
+  useEffect(() => {
+    if (channels.length > 0 && !selectedChannel) {
+      const friendsChannel = channels.find((c) => c.type === "friends");
+      setSelectedChannel(friendsChannel?.id || channels[0].id);
+    }
+  }, [channels, selectedChannel]);
+
+  const activeChannel = channels.find((c) => c.id === selectedChannel);
+  const rescuersChannel = channels.find((c) => c.type === "rescuers");
+  const gridChannels = channels.filter((c) => c.type !== "rescuers");
+
+  const handleAddMember = async (name: string, avatarUrl: string) => {
+    if (!selectedChannel) return { error: "No channel selected" };
+    return addMember(selectedChannel, name, avatarUrl);
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    await removeMember(memberId);
+  };
+
+  if (loading) {
+    return (
+      <div className="mobile-container flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="mobile-container">
@@ -166,15 +85,25 @@ export default function BuildingChannelsPage() {
         {/* Header */}
         <header className="flex items-center justify-between py-4 mb-2">
           <div className="flex items-center gap-3">
-            <Link to="/" className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+            <Link
+              to="/"
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+            >
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </Link>
             <div>
-              <h1 className="font-display text-xl font-bold text-foreground">Voice Channels</h1>
-              <p className="text-sm text-muted-foreground">{buildingName}</p>
+              <h1 className="font-display text-xl font-bold text-foreground">
+                Voice Channels
+              </h1>
+              <p className="text-sm text-muted-foreground">{locationName}</p>
             </div>
           </div>
-          <Avatar src={avatar1} alt="Profile" size="lg" status="online" />
+          <Avatar
+            src={user?.user_metadata?.avatar_url || "/placeholder.svg"}
+            alt="Profile"
+            size="lg"
+            status="online"
+          />
         </header>
 
         {/* Channels Grid - 2x2 layout */}
@@ -186,15 +115,18 @@ export default function BuildingChannelsPage() {
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <ChannelCard
-                type={channel.type}
+                type={channel.type as ChannelType}
                 name={channel.name}
-                memberCount={channel.memberCount}
-                isOnline={channel.isOnline}
-                isLive={channel.isLive}
-                image={channel.image}
+                memberCount={channel.members?.length || 0}
+                isOnline={channel.is_online}
+                isLive={channel.is_live}
+                image={channel.image_url || getDefaultChannelImage(channel.type)}
                 selected={selectedChannel === channel.id}
                 onClick={() => setSelectedChannel(channel.id)}
-                description={channel.description}
+                description={
+                  channel.description ||
+                  `${channel.members?.length || 0} Members`
+                }
               />
             </div>
           ))}
@@ -205,10 +137,18 @@ export default function BuildingChannelsPage() {
           <div className="mb-5 animate-slide-up" style={{ animationDelay: "200ms" }}>
             <div className="channel-members-rescuers rounded-2xl p-4 flex items-center justify-between border border-status-danger/20">
               <div className="flex items-center gap-3">
-                <Avatar src={rescuersChannel.image} alt="Rescuers" size="lg" />
+                <Avatar
+                  src={rescuersChannel.image_url || "/placeholder.svg"}
+                  alt="Rescuers"
+                  size="lg"
+                />
                 <div>
-                  <h4 className="font-display font-semibold text-foreground">{rescuersChannel.name}</h4>
-                  <p className="text-sm text-muted-foreground">- OFFLINE -</p>
+                  <h4 className="font-display font-semibold text-foreground">
+                    {rescuersChannel.name}
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    {rescuersChannel.is_online ? "ONLINE" : "- OFFLINE -"}
+                  </p>
                 </div>
               </div>
               <SOSBadge size="md" pulse />
@@ -241,38 +181,62 @@ export default function BuildingChannelsPage() {
         </div>
 
         {/* Current Channel Section */}
-        <div className="animate-slide-up">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Current Channel</h3>
-          <div className="card-elevated">
-            <div className="flex items-center gap-3 mb-4">
-              <Avatar 
-                src={activeChannel?.image || avatar3} 
-                alt={activeChannel?.name || "Channel"} 
-                size="lg" 
-                status="online"
-              />
-              <div className="flex-1">
-                <h3 className="font-display font-bold text-lg text-foreground">
-                  {activeChannel?.name || "Friends"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Total {currentMembers.length} Members
-                </p>
+        {activeChannel && (
+          <div className="animate-slide-up">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+              Current Channel
+            </h3>
+            <div className="card-elevated">
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar
+                  src={activeChannel.image_url || getDefaultChannelImage(activeChannel.type)}
+                  alt={activeChannel.name}
+                  size="lg"
+                  status="online"
+                />
+                <div className="flex-1">
+                  <h3 className="font-display font-bold text-lg text-foreground">
+                    {activeChannel.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {activeChannel.members?.length || 0} Members
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Members Preview - Dynamic based on channel */}
-            <div className={`${currentMemberStyle} rounded-2xl p-4 flex items-center justify-between transition-all duration-300`}>
-              <AvatarGroup avatars={currentMembers} max={5} size="lg" />
-              <button className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-colors">
-                <UserPlus className="w-5 h-5" />
-              </button>
+              {/* Dynamic Members List */}
+              <ChannelMembersList
+                members={activeChannel.members || []}
+                channelType={activeChannel.type}
+                onRemoveMember={handleRemoveMember}
+                onAddMember={() => setAddMemberOpen(true)}
+              />
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <BottomNav />
+
+      {/* Add Member Modal */}
+      <AddMemberModal
+        open={addMemberOpen}
+        onOpenChange={setAddMemberOpen}
+        channelName={activeChannel?.name || "Channel"}
+        onAddMember={handleAddMember}
+      />
     </div>
   );
+}
+
+// Helper function to get default images based on channel type
+function getDefaultChannelImage(type: string): string {
+  const images: Record<string, string> = {
+    unit: "https://api.dicebear.com/7.x/shapes/svg?seed=unit",
+    friends: "https://api.dicebear.com/7.x/shapes/svg?seed=friends",
+    management: "https://api.dicebear.com/7.x/shapes/svg?seed=management",
+    world: "https://api.dicebear.com/7.x/shapes/svg?seed=world",
+    rescuers: "https://api.dicebear.com/7.x/shapes/svg?seed=rescuers",
+  };
+  return images[type] || "/placeholder.svg";
 }
