@@ -76,7 +76,7 @@ export default function HomePage() {
     : userLocations.filter(ul => ul.category === filter);
 
   const handleBuildingClick = (locationId: string) => {
-    navigate(`/channels/${locationId}`);
+    navigate(`/location/${locationId}`);
   };
 
   // Show login prompt if not authenticated
