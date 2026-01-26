@@ -18,7 +18,7 @@ export default function BuildingChannelsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentStatus, setCurrentStatus } = useStatus();
-  const { channels, loading, addMember, removeMember } = useChannels(buildingId);
+  const { channels, loading, removeMember, refetch } = useChannels(buildingId);
   
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [locationName, setLocationName] = useState<string>("Location");
@@ -59,12 +59,13 @@ export default function BuildingChannelsPage() {
   }, [channels, selectedChannel]);
 
   const activeChannel = channels.find((c) => c.id === selectedChannel);
+  const existingMemberIds = activeChannel?.members?.map((m) => m.user_id) || [];
   const rescuersChannel = channels.find((c) => c.type === "rescuers");
   const gridChannels = channels.filter((c) => c.type !== "rescuers");
 
-  const handleAddMember = async (name: string, avatarUrl: string) => {
-    if (!selectedChannel) return { error: "No channel selected" };
-    return addMember(selectedChannel, name, avatarUrl);
+  const handleMemberAdded = () => {
+    // Refetch channels to update the member list
+    refetch();
   };
 
   const handleRemoveMember = async (memberId: string) => {
@@ -219,12 +220,16 @@ export default function BuildingChannelsPage() {
       <BottomNav />
 
       {/* Add Member Modal */}
-      <AddMemberModal
-        open={addMemberOpen}
-        onOpenChange={setAddMemberOpen}
-        channelName={activeChannel?.name || "Channel"}
-        onAddMember={handleAddMember}
-      />
+      {activeChannel && (
+        <AddMemberModal
+          open={addMemberOpen}
+          onOpenChange={setAddMemberOpen}
+          channelName={activeChannel.name}
+          channelId={activeChannel.id}
+          existingMemberIds={existingMemberIds}
+          onMemberAdded={handleMemberAdded}
+        />
+      )}
     </div>
   );
 }
