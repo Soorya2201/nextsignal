@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, AlertTriangle, XCircle, Construction } from "lucide-react";
+import { ArrowLeft, AlertTriangle, XCircle, AlertOctagon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import hazardMapImage from "@/assets/hazard-maps/hazard-map-default.png";
 import hazardMapBlockedImage from "@/assets/hazard-maps/hazard-map-blocked.png";
@@ -96,17 +96,24 @@ export default function HazardMapPage() {
         {/* Loading State */}
         {flowStep === "loading" && (
           <div className="fixed inset-0 z-50 bg-background/95 flex flex-col items-center justify-center gap-6">
-            <div className="animate-pulse">
-              <Construction className="w-24 h-24 text-amber-500" />
+            <div className="relative flex items-center justify-center">
+              {/* Vibrant radiating pulse rings */}
+              <div className="absolute w-32 h-32 rounded-full bg-destructive/20 animate-ping" style={{ animationDuration: "1s" }} />
+              <div className="absolute w-40 h-40 rounded-full bg-destructive/10 animate-ping" style={{ animationDuration: "1.5s" }} />
+              <div className="absolute w-48 h-48 rounded-full bg-destructive/5 animate-ping" style={{ animationDuration: "2s" }} />
+              {/* Bold red exclamation icon */}
+              <div className="relative z-10 w-24 h-24 rounded-full bg-destructive flex items-center justify-center shadow-lg" style={{ boxShadow: "0 0 30px hsl(var(--destructive) / 0.6)" }}>
+                <span className="text-5xl font-black text-destructive-foreground">!</span>
+              </div>
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-foreground flex items-center gap-2 justify-center">
+              <h2 className="text-2xl font-bold text-destructive flex items-center gap-2 justify-center">
                 🚧 Exit Blocked
               </h2>
               <p className="text-muted-foreground">Calculating alternative routes...</p>
             </div>
             <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-amber-500 animate-[loading_4s_ease-in-out]" 
+              <div className="h-full bg-destructive animate-[loading_4s_ease-in-out]" 
                    style={{ animation: "loading 4s ease-in-out forwards" }} />
             </div>
           </div>
