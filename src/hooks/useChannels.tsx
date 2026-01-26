@@ -27,7 +27,7 @@ export interface Channel {
 // Default member counts for special channels
 const CHANNEL_DEFAULTS: Record<string, { memberCount: number; isEditable: boolean }> = {
   management: { memberCount: 3, isEditable: false },
-  world: { memberCount: 135, isEditable: true },
+  world: { memberCount: 138, isEditable: false },
   rescuers: { memberCount: 0, isEditable: false },
 };
 
