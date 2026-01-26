@@ -17,6 +17,7 @@ import RoleDashboard from "./pages/RoleDashboard";
 import BroadcastPage from "./pages/BroadcastPage";
 import EmergencyReportPage from "./pages/EmergencyReportPage";
 import HazardMapPage from "./pages/HazardMapPage";
+import BuildingMapPage from "./pages/BuildingMapPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/broadcast" element={<BroadcastPage />} />
               <Route path="/emergency-report" element={<EmergencyReportPage />} />
               <Route path="/hazard-map" element={<HazardMapPage />} />
+              <Route path="/building-map" element={<BuildingMapPage />} />
               <Route path="/management" element={<ManagementDashboard />} />
               <Route path="/management/login" element={<ManagementLoginPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
