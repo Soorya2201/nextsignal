@@ -71,10 +71,11 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(227 42% 35%) 0%, hsl(217 85% 55%) 100%);
-    --gradient-sos: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(30 90% 55%) 100%);
-    --gradient-safe: linear-gradient(135deg, hsl(142 76% 42%) 0%, hsl(160 70% 50%) 100%);
+    /* Modern Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(227 55% 40%) 0%, hsl(217 85% 55%) 50%, hsl(200 90% 60%) 100%);
+    --gradient-sos: linear-gradient(135deg, hsl(0 84% 55%) 0%, hsl(20 90% 55%) 50%, hsl(35 95% 55%) 100%);
+    --gradient-safe: linear-gradient(135deg, hsl(142 76% 42%) 0%, hsl(155 70% 45%) 50%, hsl(170 70% 50%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%);
     
     /* Channel Member Section Gradients */
     --channel-members-unit: linear-gradient(135deg, hsl(217 85% 95%) 0%, hsl(210 80% 97%) 100%);
@@ -83,10 +84,12 @@
     --channel-members-world: linear-gradient(135deg, hsl(160 60% 92%) 0%, hsl(170 50% 95%) 100%);
     --channel-members-rescuers: linear-gradient(135deg, hsl(0 70% 94%) 0%, hsl(10 60% 96%) 100%);
 
-    /* Shadows */
-    --shadow-card: 0 4px 20px -4px hsl(220 20% 50% / 0.1);
-    --shadow-elevated: 0 8px 30px -8px hsl(220 20% 50% / 0.15);
+    /* Modern Shadows with color */
+    --shadow-card: 0 4px 24px -6px hsl(220 40% 40% / 0.12);
+    --shadow-elevated: 0 12px 40px -12px hsl(220 40% 30% / 0.2);
     --shadow-bottom-nav: 0 -4px 20px -4px hsl(220 20% 50% / 0.1);
+    --shadow-glow-primary: 0 0 40px -10px hsl(217 85% 55% / 0.4);
+    --shadow-glow-sos: 0 0 40px -10px hsl(0 84% 55% / 0.4);
   }
 
   .dark {
@@ -154,16 +157,24 @@
   }
 
   .card-elevated {
-    @apply bg-card rounded-2xl p-4;
+    @apply bg-card rounded-2xl p-4 border border-border/50;
     box-shadow: var(--shadow-card);
+    backdrop-filter: blur(10px);
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl rounded-2xl p-4 border border-border/30;
+    box-shadow: var(--shadow-elevated);
   }
 
   .gradient-primary {
     background: var(--gradient-primary);
+    box-shadow: var(--shadow-glow-primary);
   }
 
   .gradient-sos {
     background: var(--gradient-sos);
+    box-shadow: var(--shadow-glow-sos);
   }
 
   .gradient-safe {
