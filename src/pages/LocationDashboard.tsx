@@ -224,7 +224,7 @@ export default function LocationDashboard() {
           <div className="grid grid-cols-2 gap-3">
             {/* Building Map */}
             <button
-              onClick={() => navigate(`/channels/${locationId}`)}
+              onClick={() => navigate(`/building-map?location=${locationId}`)}
               className="card-elevated flex flex-col items-center justify-center py-8 hover:scale-[1.02] transition-transform"
             >
               <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
