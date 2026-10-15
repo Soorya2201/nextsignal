@@ -1,73 +1,32 @@
-# Welcome to your Lovable project
+# NextSignal
 
-## Project info
+**Emergency coordination for buildings during climate disasters and evacuations: role-based broadcasts, hazard reporting, live building channels, and an AI safety assistant.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **Role-based access.** Residents, building management and responders each get a separate dashboard and permissions (Supabase Auth + `user_roles` with row-level security).
+- **Broadcasts.** Management sends severity-tagged alerts (e.g. "Evacuation Notice – Building A") to everyone in a building.
+- **Building channels.** Per-building and per-floor chat channels with membership management.
+- **Emergency reports.** Residents report fire, structural damage, flooding, debris, or areas cordoned off by emergency services.
+- **Hazard and building maps.** Exit routes (main entrance, stairwell, emergency exit) are shown with blocked or open status.
+- **AI safety assistant.** A streaming chat assistant (a Supabase Edge Function calling Gemini) answers in short, actionable steps and always escalates life-threatening situations to 911.
 
-There are several ways of editing your application.
+## Stack
 
-**Use Lovable**
+React · TypeScript · Vite · Tailwind / shadcn-ui · Supabase (Postgres, Auth, RLS, Edge Functions) · Gemini
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Built with [Lovable](https://lovable.dev) (AI app builder) on a Supabase backend.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Data model
 
-**Use your preferred IDE**
+`locations → location_floors → location_units`, `profiles`, `user_roles`, `user_locations`, `channels`, `channel_members`, `chat_messages`, `broadcasts`, `blueprints` (see `supabase/migrations/`).
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Run locally
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+cp .env.example .env    # fill in your Supabase project URL, ID and anon key
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The chat assistant needs the `chat` Edge Function deployed (`supabase functions deploy chat`) with an LLM gateway key set as a function secret.
